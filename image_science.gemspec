@@ -7,4 +7,5 @@ Gem::Specification.new do |s|
   s.authors     = [""]
   s.email       = ''
   s.files       = ["lib/image_science.rb"]
+  s.add_runtime_dependency 'RubyInline', '~> 3.12.4'
 end
