@@ -59,7 +59,7 @@ class ImageScience
   def thumbnail(size, greyscale = false) # :yields: image
     w, h = size[0], size[1]
 
-    self.resize(w.to_i, h.to_i, greyscale) do |image|
+    self.resize(w.to_i, h.to_i, greyscale ? 1 : 0) do |image|
       yield image
     end
   end
