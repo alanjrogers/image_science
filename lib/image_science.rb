@@ -51,16 +51,18 @@ class ImageScience
   # filter and yields the new image.
   #
   # :method: resize
+  
+  # :method: resize_greyscale
 
   ##
   # Creates a proportional thumbnail of the image scaled so its longest
   # edge is resized to +size+ and yields the new image.
 
-  def thumbnail(size) # :yields: image
+  def thumbnail(size, greyscale = false) # :yields: image
     w, h = width, height
     scale = size.to_f / (w > h ? w : h)
 
-    self.resize((w * scale).round, (h * scale).round) do |image|
+    self.resize((w * scale).round, (h * scale).round, greyscale) do |image|
       yield image
     end
   end
@@ -70,7 +72,7 @@ class ImageScience
   # to match the shortest edge, resizes to +size+, and yields the new
   # image.
 
-  def cropped_thumbnail(size) # :yields: image
+  def cropped_thumbnail(size, greyscale = false) # :yields: image
     w, h = width, height
     l, t, r, b, half = 0, 0, w, h, (w - h).abs / 2
 
@@ -78,7 +80,7 @@ class ImageScience
     t, b = half, half + w if h > w
 
     with_crop(l, t, r, b) do |img|
-      img.thumbnail(size) do |thumb|
+      img.thumbnail(size, greyscale) do |thumb|
         yield thumb
       end
     end
@@ -298,13 +300,39 @@ class ImageScience
     END
 
     builder.c <<-"END"
-      VALUE resize(int w, int h) {
+      VALUE resize(int w, int h, bool greyscale) {
         FIBITMAP *bitmap, *image;
         if (w <= 0) rb_raise(rb_eArgError, "Width <= 0");
         if (h <= 0) rb_raise(rb_eArgError, "Height <= 0");
         GET_BITMAP(bitmap);
         image = FreeImage_Rescale(bitmap, w, h, FILTER_CATMULLROM);
         if (image) {
+          if (greyscale) {
+            RGBQUAD a_colors[64];
+            RGBQUAD b_colors[64];
+        
+            int grey_point = 192;
+        
+            for (int i=grey_point;i<256;i++)
+            {
+               a_colors[i - grey_point].rgbRed = i;
+               a_colors[i - grey_point].rgbGreen = i;
+               a_colors[i - grey_point].rgbBlue = i;
+
+               b_colors[i - grey_point].rgbRed = grey_point;
+               b_colors[i - grey_point].rgbGreen = grey_point;
+               b_colors[i - grey_point].rgbBlue = grey_point;
+            }
+        
+        
+            FIBITMAP *grey = FreeImage_ConvertToGreyscale(image);
+            FreeImage_Unload(image);
+        
+            if (grey) {
+              int result = FreeImage_ApplyColorMapping(grey, a_colors, b_colors, 64, TRUE, FALSE);
+              image = grey;
+            }
+          }
           copy_icc_profile(self, bitmap, image);
           return wrap_and_yield(image, self, 0);
         }
