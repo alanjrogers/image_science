@@ -52,8 +52,6 @@ class ImageScience
   #
   # :method: resize
   
-  # :method: resize_greyscale
-
   ##
   # Creates a proportional thumbnail of the image scaled so its longest
   # edge is resized to +size+ and yields the new image.
@@ -300,14 +298,14 @@ class ImageScience
     END
 
     builder.c <<-"END"
-      VALUE resize(int w, int h, bool greyscale) {
+      VALUE resize(int w, int h, int greyscale) {
         FIBITMAP *bitmap, *image;
         if (w <= 0) rb_raise(rb_eArgError, "Width <= 0");
         if (h <= 0) rb_raise(rb_eArgError, "Height <= 0");
         GET_BITMAP(bitmap);
         image = FreeImage_Rescale(bitmap, w, h, FILTER_CATMULLROM);
         if (image) {
-          if (greyscale) {
+          if (greyscale > 0) {
             RGBQUAD a_colors[64];
             RGBQUAD b_colors[64];
         
