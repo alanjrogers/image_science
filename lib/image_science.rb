@@ -57,10 +57,9 @@ class ImageScience
   # edge is resized to +size+ and yields the new image.
 
   def thumbnail(size, greyscale = false) # :yields: image
-    w, h = width, height
-    scale = size.to_f / (w > h ? w : h)
+    w, h = size[0], size[1]
 
-    self.resize((w * scale).round, (h * scale).round, greyscale) do |image|
+    self.resize(w.to_i, h.to_i, greyscale) do |image|
       yield image
     end
   end
@@ -321,7 +320,6 @@ class ImageScience
                b_colors[i - grey_point].rgbGreen = grey_point;
                b_colors[i - grey_point].rgbBlue = grey_point;
             }
-        
         
             FIBITMAP *grey = FreeImage_ConvertToGreyscale(image);
             FreeImage_Unload(image);
