@@ -84,6 +84,8 @@ class ImageScience
   end
 
   inline do |builder|
+    builder.add_compile_flags "-std=c99"
+    
     %w[/opt/local /usr/local ./.heroku/vendor].each do |dir|
       if File.directory? "#{dir}/include" then
         builder.add_compile_flags "-I#{dir}/include"
